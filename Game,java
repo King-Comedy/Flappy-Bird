@@ -1,0 +1,139 @@
+package CY;
+
+/*import java.applet.Applet;
+import java.applet.AudioClip;
+import java.awt.Frame; 
+import java.net.MalformedURLException; 
+import java.net.URI;
+import java.net.URL;*/
+import javax.swing.JFrame;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.image.BufferedImage;
+//import java.io.*;
+import java.io.IOException;
+import javax.imageio.ImageIO;
+//import javax.swing.JFrame;
+import javax.swing.JPanel;
+
+public class Game extends JPanel{
+
+	Column col1;
+	Column col2;
+	Bird bird;
+	Ground ground;
+	BufferedImage background;
+	BufferedImage gameoverImg;
+	BufferedImage startImg;
+	boolean start;
+	int score;
+	boolean gameOver;
+	public Game()throws IOException{
+		background=ImageIO.read(getClass().getResource("/TP/bg.png"));
+		gameoverImg = ImageIO.read(getClass().getResource("/TP/gameover.png"));
+		startImg = ImageIO.read(getClass().getResource("/TP/start.png"));
+		start();
+	}
+	public void start(){
+		try{
+			start=false;
+			gameOver=false;
+			bird=new Bird();
+			ground=new Ground(400);
+			col1=new Column(320+100);
+			col2=new Column(320+100+180);
+			score=0;
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
+	}
+	public void action()throws Exception{
+        addMouseListener(new MouseAdapter(){//匿名类
+        	public void mousePressed(MouseEvent e){
+        		if(gameOver){
+        			start();
+        			return;
+        		}
+        		start=true;
+        		bird.fly();
+        	}
+        });
+        requestFocus();
+       addKeyListener(new KeyAdapter(){
+    	   public void keyPressed(KeyEvent e){
+    		   if(e.getKeyCode()==KeyEvent.VK_SPACE){
+    			   if(gameOver){
+    				   start();
+    				   return;
+    			   }
+    			   start=true;
+    			   bird.fly();
+    		   }
+    	   }
+       });
+       
+       while(true){
+    	   if(start&&!gameOver){
+    		   bird.step();
+    		   col1.step();
+    		   col2.step();
+    		   if(bird.pass(col1, col2)){//判断是否通过了柱子
+    			   score++;
+    		   }
+    		   if(bird.hit(col1, col2, ground)){
+    			   start=false;
+    			   gameOver=true;
+    		   }
+    	   }
+             ground.step();
+             repaint();
+             Thread.sleep(1000/60);
+       }
+	}
+	  public void paint(Graphics g){
+		  Graphics2D g2 = (Graphics2D)g;
+		  RenderingHints qualityHints = new RenderingHints(
+		  RenderingHints.KEY_ANTIALIASING,
+		  RenderingHints.VALUE_ANTIALIAS_ON);
+		  qualityHints.put(RenderingHints.KEY_RENDERING,
+		  RenderingHints.VALUE_RENDER_QUALITY);
+		  g2.setRenderingHints(qualityHints);
+		  g.drawImage(background,0,0,null);//绘制背景
+		  col1.paint(g);
+		  col2.paint(g);//绘制柱子
+		  ground.paint(g);//绘制地面
+		  Font font =new Font(Font.MONOSPACED,Font.BOLD,30);
+		  g.setFont(font);
+		  g.setColor(Color.WHITE);
+		  g.drawString(score+"",30,50);
+		  bird.paint(g);//绘制小鸟
+		  //绘制结束状态
+		  if(gameOver){
+			//g.drawString("Game Over!", 70 , 190);
+			  g.drawImage(gameoverImg, 30, 200, null);
+		  }
+	  }
+		public static void main(String[] args)throws Exception{
+			// TODO Auto-generated method stub
+	          JFrame frame=new JFrame("像素鸟");
+	          Game game=new Game();
+	          frame.add(game);
+	          frame.setSize(325,505);
+	          frame.setVisible(false);
+	          frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	          frame.setLocationRelativeTo(null);
+	          frame.setVisible(true);
+	          game.action();
+		}
+		
+
+}
+
